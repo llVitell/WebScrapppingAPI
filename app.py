@@ -4,6 +4,17 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
+def extract_image(img_elem):
+    image_attributes = ['data-src', 'src']
+    
+    for attr in image_attributes:
+        if img_elem and img_elem.has_attr(attr):
+            img = img_elem[attr]
+            if img and not img.startswith('data:image'):
+                return img
+    
+    return None
+
 @app.route('/products/<item>', methods=['GET'])
 def get_products(item):
     limit = request.args.get('limit', default=50, type=int)
@@ -17,11 +28,12 @@ def get_products(item):
     products_list = []
 
     for product in products:
-        title = product.find('h2', class_='poly-component__title').text if product.find('h2', class_='poly-component__title') else "Sin título"
-        price = product.find('div', class_='poly-price__current').text if product.find('div', class_='poly-price__current') else "Sin precio"
-        url = product.find('h2', class_='poly-component__title').find('a').get('href') if product.find('h2', class_='poly-component__title') and product.find('h2', class_='poly-component__title').find('a') else "Sin URL"
-        img = product.find('img', class_='poly-component__picture').get('src') if product.find('img', class_='poly-component__picture') else "Sin imagen"
-        
+        title = product.find('h2', class_='poly-component__title').text
+        price = product.find('div', class_='poly-price__current').text
+        url = product.find('h2', class_='poly-component__title').find('a').get('href')
+        img_elem = product.find('img', class_='poly-component__picture')
+        img = extract_image(img_elem)
+
         products_list.append({
             'title': title,
             'price': price,
